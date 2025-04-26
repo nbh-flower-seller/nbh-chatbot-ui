@@ -49,8 +49,22 @@ export function Chat({
     onFinish: () => {
       mutate('/api/history');
     },
-    onError: () => {
-      toast.error('An error occured, please try again!');
+    onError: (err) => {
+      console.error('Chat error:', err);
+      
+      // Get more detailed error information
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'An unknown error occurred';
+      
+      // Log additional context that might help debugging
+      console.error('Error context:', { 
+        chatId: id,
+        model: selectedChatModel,
+        hasAttachments: attachments.length > 0 
+      });
+      
+      toast.error(`Chat error: ${errorMessage}`);
     },
   });
 

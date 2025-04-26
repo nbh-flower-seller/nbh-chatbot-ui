@@ -42,17 +42,23 @@ export async function POST(request: Request) {
 
     const session = await auth();
 
+    // console.log('session', session);
+
     if (!session || !session.user || !session.user.id) {
       return new Response('Unauthorized', { status: 401 });
     }
 
     const userMessage = getMostRecentUserMessage(messages);
 
+    // console.log('userMessage', userMessage);
+
     if (!userMessage) {
       return new Response('No user message found', { status: 400 });
     }
 
     const chat = await getChatById({ id });
+
+    // console.log('chat', chat);
 
     if (!chat) {
       const title = await generateTitleFromUserMessage({

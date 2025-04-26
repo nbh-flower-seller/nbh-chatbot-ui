@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { toast } from '@/components/toast';
 
 import { AuthForm } from '@/components/auth-form';
@@ -12,37 +12,43 @@ import { login, type LoginActionState } from '../actions';
 
 export default function Page() {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const [email, setEmail] = useState('');
+  const [result, setResult] = useState<LoginActionState | null>(null);
   const [isSuccessful, setIsSuccessful] = useState(false);
 
-  const [state, formAction] = useActionState<LoginActionState, FormData>(
-    login,
-    {
-      status: 'idle',
-    },
-  );
-
   useEffect(() => {
-    if (state.status === 'failed') {
+    if (!result) return;
+
+    if (result.status === 'failed') {
       toast({
         type: 'error',
         description: 'Invalid credentials!',
       });
-    } else if (state.status === 'invalid_data') {
+    } else if (result.status === 'invalid_data') {
       toast({
         type: 'error',
         description: 'Failed validating your submission!',
       });
-    } else if (state.status === 'success') {
+    } else if (result.status === 'success') {
       setIsSuccessful(true);
       router.refresh();
     }
-  }, [state.status]);
+
+    // Reset result after handling
+    setResult(null);
+  }, [result, router]);
 
   const handleSubmit = (formData: FormData) => {
     setEmail(formData.get('email') as string);
-    formAction(formData);
+    startTransition(async () => {
+      // Pass initial state (null or equivalent) as the first arg if your server action expects it
+      // If `login` action was modified for useActionState to NOT take the state as first arg, adjust here.
+      // Assuming the `login` action still expects a state argument (even if unused)
+      const actionResult = await login({ status: 'idle' } /* initial state */, formData);
+      setResult(actionResult);
+    });
   };
 
   return (
@@ -54,8 +60,9 @@ export default function Page() {
             Use your email and password to sign in
           </p>
         </div>
+        {/* Pass isPending to SubmitButton if it accepts a loading prop */}
         <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
+          <SubmitButton isSuccessful={isSuccessful} isPending={isPending}>Sign in</SubmitButton>
           <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
             {"Don't have an account? "}
             <Link

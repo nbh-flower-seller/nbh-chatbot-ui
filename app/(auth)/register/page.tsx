@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
@@ -12,38 +12,39 @@ import { toast } from '@/components/toast';
 
 export default function Page() {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const [email, setEmail] = useState('');
+  const [result, setResult] = useState<RegisterActionState | null>(null);
   const [isSuccessful, setIsSuccessful] = useState(false);
 
-  const [state, formAction] = useActionState<RegisterActionState, FormData>(
-    register,
-    {
-      status: 'idle',
-    },
-  );
-
   useEffect(() => {
-    if (state.status === 'user_exists') {
+    if (!result) return;
+
+    if (result.status === 'user_exists') {
       toast({ type: 'error', description: 'Account already exists!' });
-    } else if (state.status === 'failed') {
+    } else if (result.status === 'failed') {
       toast({ type: 'error', description: 'Failed to create account!' });
-    } else if (state.status === 'invalid_data') {
+    } else if (result.status === 'invalid_data') {
       toast({
         type: 'error',
         description: 'Failed validating your submission!',
       });
-    } else if (state.status === 'success') {
+    } else if (result.status === 'success') {
       toast({ type: 'success', description: 'Account created successfully!' });
-
       setIsSuccessful(true);
       router.refresh();
     }
-  }, [state]);
+
+    setResult(null);
+  }, [result, router]);
 
   const handleSubmit = (formData: FormData) => {
     setEmail(formData.get('email') as string);
-    formAction(formData);
+    startTransition(async () => {
+      const actionResult = await register({ status: 'idle' }, formData);
+      setResult(actionResult);
+    });
   };
 
   return (
@@ -56,7 +57,7 @@ export default function Page() {
           </p>
         </div>
         <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign Up</SubmitButton>
+          <SubmitButton isSuccessful={isSuccessful} isPending={isPending}>Sign Up</SubmitButton>
           <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
             {'Already have an account? '}
             <Link

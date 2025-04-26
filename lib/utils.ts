@@ -12,6 +12,9 @@ import { twMerge } from 'tailwind-merge';
 
 import type { DBMessage, Document } from '@/lib/db/schema';
 
+/**
+ * Combine multiple class names with Tailwind CSS optimizations
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -162,4 +165,43 @@ export function getTrailingMessageId({
   if (!trailingMessage) return null;
 
   return trailingMessage.id;
+}
+
+/**
+ * Format a date to a human-readable format
+ */
+export function formatDate(date: Date | string): string {
+  if (typeof date === 'string') {
+    date = new Date(date);
+  }
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+}
+
+/**
+ * Format a number with commas for thousands
+ */
+export function formatNumber(num: number): string {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/**
+ * Truncate a string to a specified length
+ */
+export function truncate(str: string, length: number): string {
+  if (str.length <= length) {
+    return str;
+  }
+  return str.slice(0, length) + '...';
+}
+
+/**
+ * Capitalize the first letter of a string
+ */
+export function capitalize(str: string): string {
+  if (!str || str.length === 0) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }

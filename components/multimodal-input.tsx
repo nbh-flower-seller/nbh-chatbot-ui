@@ -138,18 +138,36 @@ function PureMultimodalInput({
 
       if (response.ok) {
         const data = await response.json();
-        const { url, pathname, contentType } = data;
+        console.log('Upload response data:', data);
+        
+        // Check that we have the expected properties in the response
+        if (!data.url || !data.name) {
+          console.error('Invalid response format:', data);
+          toast.error('File upload response missing required fields');
+          return undefined;
+        }
 
         return {
-          url,
-          name: pathname,
-          contentType: contentType,
+          url: data.url,
+          name: data.name,
+          contentType: file.type,
         };
       }
-      const { error } = await response.json();
-      toast.error(error);
+      
+      // Better error handling for non-ok responses
+      try {
+        const errorData = await response.json();
+        console.error('Upload error response:', errorData);
+        toast.error(errorData.error || 'Failed to upload file');
+      } catch (parseError) {
+        console.error('Could not parse error response:', parseError);
+        toast.error(`Upload failed with status: ${response.status}`);
+      }
+      return undefined;
     } catch (error) {
+      console.error('File upload exception:', error);
       toast.error('Failed to upload file, please try again!');
+      return undefined;
     }
   };
 
