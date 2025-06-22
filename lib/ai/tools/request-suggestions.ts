@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { Session } from 'next-auth';
 import { DataStreamWriter, streamObject, tool } from 'ai';
-import { getDocumentById, saveSuggestions } from '@/lib/db/queries';
+import { getDocumentById } from '@/lib/db/queries/chat/document-queries';
+import { saveSuggestions } from '@/lib/db/queries/chat/suggestion-queries';
 import { Suggestion } from '@/lib/db/schema';
 import { generateUUID } from '@/lib/utils';
 import { myProvider } from '../providers';

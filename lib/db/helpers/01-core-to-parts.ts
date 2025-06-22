@@ -1,11 +1,23 @@
 import { config } from 'dotenv';
 import postgres from 'postgres';
 import {
-  chat,
+  userCredentials,
+  userAccount,
+  conversation,
   message,
-  messageDeprecated,
   vote,
-  voteDeprecated,
+  address,
+  customerProfile,
+  order,
+  orderItem,
+  label,
+  provider,
+  product,
+  suggestion,
+  document,
+  userStatus,
+  orderStatus,
+  labelType,
 } from '../schema';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { inArray } from 'drizzle-orm';
@@ -27,7 +39,7 @@ const INSERT_BATCH_SIZE = 100; // Insert 100 messages at a time
 
 type NewMessageInsert = {
   id: string;
-  chatId: string;
+  conversationId: string;
   parts: any[];
   role: string;
   attachments: any[];
@@ -36,42 +48,42 @@ type NewMessageInsert = {
 
 type NewVoteInsert = {
   messageId: string;
-  chatId: string;
+  conversationId: string;
   isUpvoted: boolean;
 };
 
 async function createNewTable() {
-  const chats = await db.select().from(chat);
+  const conversations = await db.select().from(conversation);
   let processedCount = 0;
 
   // Process chats in batches
-  for (let i = 0; i < chats.length; i += BATCH_SIZE) {
-    const chatBatch = chats.slice(i, i + BATCH_SIZE);
-    const chatIds = chatBatch.map((chat) => chat.id);
+  for (let i = 0; i < conversations.length; i += BATCH_SIZE) {
+    const conversationBatch = conversations.slice(i, i + BATCH_SIZE);
+    const conversationIds = conversationBatch.map((conversation) => conversation.id);
 
     // Fetch all messages and votes for the current batch of chats in bulk
     const allMessages = await db
       .select()
-      .from(messageDeprecated)
-      .where(inArray(messageDeprecated.chatId, chatIds));
+      .from(message)
+      .where(inArray(message.conversationId, conversationIds));
 
     const allVotes = await db
       .select()
-      .from(voteDeprecated)
-      .where(inArray(voteDeprecated.chatId, chatIds));
+      .from(vote)
+      .where(inArray(vote.conversationId, conversationIds));
 
     // Prepare batches for insertion
     const newMessagesToInsert: NewMessageInsert[] = [];
     const newVotesToInsert: NewVoteInsert[] = [];
 
     // Process each chat in the batch
-    for (const chat of chatBatch) {
+    for (const conversation of conversationBatch) {
       processedCount++;
-      console.info(`Processed ${processedCount}/${chats.length} chats`);
+      console.info(`Processed ${processedCount}/${conversations.length} conversations`);
 
       // Filter messages and votes for this specific chat
-      const messages = allMessages.filter((msg) => msg.chatId === chat.id);
-      const votes = allVotes.filter((v) => v.chatId === chat.id);
+      const messages = allMessages.filter((msg) => msg.conversationId === conversation.id);
+      const votes = allVotes.filter((v) => v.conversationId === conversation.id);
 
       // Group messages into sections
       const messageSection: Array<UIMessage> = [];
@@ -114,7 +126,7 @@ async function createNewTable() {
               if (message.role === 'user') {
                 return {
                   id: message.id,
-                  chatId: chat.id,
+                  conversationId: conversation.id,
                   parts: [{ type: 'text', text: message.content }],
                   role: message.role,
                   createdAt: message.createdAt,
@@ -123,7 +135,7 @@ async function createNewTable() {
               } else if (message.role === 'assistant') {
                 return {
                   id: message.id,
-                  chatId: chat.id,
+                  conversationId: conversation.id,
                   parts: message.parts || [],
                   role: message.role,
                   createdAt: message.createdAt,
@@ -143,14 +155,14 @@ async function createNewTable() {
               if (voteByMessage) {
                 newVotesToInsert.push({
                   messageId: msg.id,
-                  chatId: msg.chatId,
+                  conversationId: msg.conversationId,
                   isUpvoted: voteByMessage.isUpvoted,
                 });
               }
             }
           }
         } catch (error) {
-          console.error(`Error processing chat ${chat.id}: ${error}`);
+          console.error(`Error processing conversation ${conversation.id}: ${error}`);
         }
       }
     }
@@ -162,7 +174,7 @@ async function createNewTable() {
         // Ensure all required fields are present
         const validMessageBatch = messageBatch.map((msg) => ({
           id: msg.id,
-          chatId: msg.chatId,
+          conversationId: msg.conversationId,
           parts: msg.parts,
           role: msg.role,
           attachments: msg.attachments,

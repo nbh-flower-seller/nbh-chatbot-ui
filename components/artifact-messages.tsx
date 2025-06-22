@@ -8,7 +8,7 @@ import { UIArtifact } from './artifact';
 import { UseChatHelpers } from '@ai-sdk/react';
 
 interface ArtifactMessagesProps {
-  chatId: string;
+  conversationId: string;
   status: UseChatHelpers['status'];
   votes: Array<Vote> | undefined;
   messages: Array<UIMessage>;
@@ -19,7 +19,7 @@ interface ArtifactMessagesProps {
 }
 
 function PureArtifactMessages({
-  chatId,
+  conversationId,
   status,
   votes,
   messages,
@@ -37,7 +37,7 @@ function PureArtifactMessages({
     >
       {messages.map((message, index) => (
         <PreviewMessage
-          chatId={chatId}
+          conversationId={conversationId}
           key={message.id}
           message={message}
           isLoading={status === 'streaming' && index === messages.length - 1}

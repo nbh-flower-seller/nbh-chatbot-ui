@@ -18,3 +18,15 @@ export const chatModels: Array<ChatModel> = [
     description: 'Uses advanced reasoning',
   },
 ];
+
+
+export interface ProductFilter {
+  search?: string
+  categories?: string[]
+  subCategories?: string[]
+  tags?: string[]
+  colors?: string[]
+  sizes?: string[]
+  providers?: string[]
+  origins?: string[]
+}

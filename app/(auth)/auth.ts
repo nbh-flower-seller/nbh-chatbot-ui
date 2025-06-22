@@ -1,8 +1,8 @@
 import { compare } from 'bcrypt-ts';
 import NextAuth, { type User, type Session } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-
-import { getUser } from '@/lib/db/queries';
+import { getUserAccountByEmail } from '@/lib/db/queries/auth/useraccount-queries';
+import { getUserCredentialById } from '@/lib/db/queries/auth/usercredential-queries';
 
 import { authConfig } from './auth.config';
 
@@ -21,10 +21,12 @@ export const {
     Credentials({
       credentials: {},
       async authorize({ email, password }: any) {
-        const users = await getUser(email);
+        const users = await getUserAccountByEmail(email);
         if (users.length === 0) return null;
         // biome-ignore lint: Forbidden non-null assertion.
-        const passwordsMatch = await compare(password, users[0].password!);
+
+        const userCredentials = await getUserCredentialById(users[0].id);
+        const passwordsMatch = await compare(password, userCredentials[0].password!);
         if (!passwordsMatch) return null;
         return users[0] as any;
       },

@@ -1,12 +1,13 @@
 import { auth } from '@/app/(auth)/auth';
-import { getChatById, getVotesByChatId, voteMessage } from '@/lib/db/queries';
+import { getConversationById, getVotesByConversationId } from '@/lib/db/queries/chat/conversation-queries';
+import { voteMessage } from '@/lib/db/queries/chat/message-queries';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const chatId = searchParams.get('chatId');
+  const conversationId = searchParams.get('conversationId');
 
-  if (!chatId) {
-    return new Response('chatId is required', { status: 400 });
+  if (!conversationId) {
+    return new Response('conversationId is required', { status: 400 });
   }
 
   const session = await auth();
@@ -15,31 +16,31 @@ export async function GET(request: Request) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const chat = await getChatById({ id: chatId });
+  const conversation = await getConversationById({ id: conversationId });
 
-  if (!chat) {
-    return new Response('Chat not found', { status: 404 });
+  if (!conversation) {
+    return new Response('Conversation not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
+  if (conversation.userId !== session.user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const votes = await getVotesByChatId({ id: chatId });
+  const votes = await getVotesByConversationId({ id: conversationId });
 
   return Response.json(votes, { status: 200 });
 }
 
 export async function PATCH(request: Request) {
   const {
-    chatId,
+    conversationId,
     messageId,
     type,
-  }: { chatId: string; messageId: string; type: 'up' | 'down' } =
+  }: { conversationId: string; messageId: string; type: 'up' | 'down' } =
     await request.json();
 
-  if (!chatId || !messageId || !type) {
-    return new Response('messageId and type are required', { status: 400 });
+  if (!conversationId || !messageId || !type) {
+    return new Response('conversationId, messageId and type are required', { status: 400 });
   }
 
   const session = await auth();
@@ -48,18 +49,18 @@ export async function PATCH(request: Request) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const chat = await getChatById({ id: chatId });
+  const conversation = await getConversationById({ id: conversationId });
 
-  if (!chat) {
-    return new Response('Chat not found', { status: 404 });
+  if (!conversation) {
+    return new Response('Conversation not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
+  if (conversation.userId !== session.user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
   await voteMessage({
-    chatId,
+    conversationId,
     messageId,
     type: type,
   });

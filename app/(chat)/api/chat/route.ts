@@ -4,15 +4,15 @@ import {
   createDataStreamResponse,
   smoothStream,
   streamText,
+  DataStreamWriter,
 } from 'ai';
 import { auth } from '@/app/(auth)/auth';
 import { systemPrompt } from '@/lib/ai/prompts';
 import {
-  deleteChatById,
-  getChatById,
-  saveChat,
-  saveMessages,
-} from '@/lib/db/queries';
+  deleteConversationById,
+  getConversationById,
+  saveConversation,
+} from '@/lib/db/queries/chat/conversation-queries';
 import {
   generateUUID,
   getMostRecentUserMessage,
@@ -25,7 +25,10 @@ import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
-
+import { saveMessages } from '@/lib/db/queries/chat/message-queries';
+import { checkProduct } from '@/lib/ai/tools/custom-tools/check-product';
+import { makeOrder } from '@/lib/ai/tools/custom-tools/make-order';
+import { detectProduct } from '@/lib/ai/tools/custom-tools/detect-product';
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
@@ -56,51 +59,110 @@ export async function POST(request: Request) {
       return new Response('No user message found', { status: 400 });
     }
 
-    const chat = await getChatById({ id });
+    // FLOWER DETECTION FLOW: If user message has image attachment, run detectProduct and prepend result as context
+    let processedMessages = messages
+    const attachments = userMessage.experimental_attachments ?? []
+    const imageAttachment = attachments.length > 0 ? attachments[0] : null
+    let detectionResult: any = null
+
+
+    const conversation = await getConversationById({ id });
 
     // console.log('chat', chat);
 
-    if (!chat) {
+    if (!conversation) {
       const title = await generateTitleFromUserMessage({
         message: userMessage,
       });
 
-      await saveChat({ id, userId: session.user.id, title });
+      await saveConversation({ id, userId: session.user.id, title });
     } else {
-      if (chat.userId !== session.user.id) {
+      if (conversation.userId !== session.user.id) {
         return new Response('Unauthorized', { status: 401 });
       }
     }
 
-    await saveMessages({
-      messages: [
-        {
-          chatId: id,
-          id: userMessage.id,
-          role: 'user',
-          parts: userMessage.parts,
-          attachments: userMessage.experimental_attachments ?? [],
-          createdAt: new Date(),
-        },
-      ],
-    });
+    if (imageAttachment && imageAttachment.url) {
+      // Create a minimal mock DataStreamWriter for detectProduct
+      const tempStream = {
+        writeData: () => { },
+        write: () => { },
+        writeMessageAnnotation: () => { },
+        writeSource: () => { },
+        merge: () => { },
+        onError: undefined
+      }
+      // Call detectProduct tool directly
+      const detectProductTool = detectProduct({ session, dataStream: tempStream })
+      const toolResult = await detectProductTool.execute(
+        { imageUrl: imageAttachment.url },
+        { toolCallId: 'manual-flower-detect', messages: [] }
+      )
+      detectionResult = toolResult?.detection
+      // Prepend a system message with the detection result as context
+      if (detectionResult) {
+        // const detectionText = `Flower detection result: ${JSON.stringify(detectionResult)}. Use this information to answer the user's question.`
+        // processedMessages = [
+        //   {
+        //     id: `detection-context-${userMessage.id}`,
+        //     role: 'system',
+        //     content: detectionText,
+        //     parts: [
+        //       { type: 'text', text: detectionText }
+        //     ]
+        //   },
+        //   ...messages
+        // ]
+
+        await saveMessages({
+          messages: [
+            {
+              conversationId: id,
+              id: userMessage.id,
+              role: 'assistant',
+              parts: [
+                { type: 'text', text: detectionResult.flower_name }
+              ],
+              attachments: userMessage.experimental_attachments ?? [],
+              createdAt: new Date(),
+            },
+          ],
+        })
+      }
+    } else {
+      await saveMessages({
+        messages: [
+          {
+            conversationId: id,
+            id: userMessage.id,
+            role: 'user',
+            parts: userMessage.parts,
+            attachments: userMessage.experimental_attachments ?? [],
+            createdAt: new Date(),
+          },
+        ],
+      });
+    }
 
     return createDataStreamResponse({
       execute: (dataStream) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel }),
-          messages,
+          messages: processedMessages,
           maxSteps: 5,
           experimental_activeTools:
             selectedChatModel === 'chat-model-reasoning'
               ? []
               : [
-                  'getWeather',
-                  'createDocument',
-                  'updateDocument',
-                  'requestSuggestions',
-                ],
+                'getWeather',
+                'createDocument',
+                'updateDocument',
+                'requestSuggestions',
+                'checkProduct',
+                'makeOrder',
+                'detectProduct',
+              ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
           tools: {
@@ -111,6 +173,9 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            checkProduct: checkProduct({ session, dataStream }),
+            makeOrder: makeOrder({ session, dataStream }),
+            detectProduct: detectProduct({ session, dataStream }),
           },
           onFinish: async ({ response }) => {
             if (session.user?.id) {
@@ -134,7 +199,7 @@ export async function POST(request: Request) {
                   messages: [
                     {
                       id: assistantId,
-                      chatId: id,
+                      conversationId: id,
                       role: assistantMessage.role,
                       parts: assistantMessage.parts,
                       attachments:
@@ -160,11 +225,13 @@ export async function POST(request: Request) {
           sendReasoning: true,
         });
       },
-      onError: () => {
+      onError: (error) => {
+        console.error('Error in chat route', error);
         return 'Oops, an error occured!';
       },
     });
   } catch (error) {
+    console.error('Error in chat route', error);
     return new Response('An error occurred while processing your request!', {
       status: 404,
     });
@@ -186,15 +253,15 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const chat = await getChatById({ id });
+    const conversation = await getConversationById({ id });
 
-    if (chat.userId !== session.user.id) {
+    if (conversation.userId !== session.user.id) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    await deleteChatById({ id });
+    await deleteConversationById({ id });
 
-    return new Response('Chat deleted', { status: 200 });
+    return new Response('Conversation deleted', { status: 200 });
   } catch (error) {
     return new Response('An error occurred while processing your request!', {
       status: 500,

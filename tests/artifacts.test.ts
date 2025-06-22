@@ -28,7 +28,7 @@ test.describe('artifacts activity', () => {
       'A document was created and is now visible to the user.',
     );
 
-    await chatPage.hasChatIdInUrl();
+    await chatPage.hasconversationIdInUrl();
   });
 
   test('toggle artifact visibility', async () => {

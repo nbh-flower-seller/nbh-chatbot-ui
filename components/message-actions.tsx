@@ -17,12 +17,12 @@ import equal from 'fast-deep-equal';
 import { toast } from 'sonner';
 
 export function PureMessageActions({
-  chatId,
+  conversationId,
   message,
   vote,
   isLoading,
 }: {
-  chatId: string;
+  conversationId: string;
   message: Message;
   vote: Vote | undefined;
   isLoading: boolean;
@@ -74,7 +74,7 @@ export function PureMessageActions({
                 const upvote = fetch('/api/vote', {
                   method: 'PATCH',
                   body: JSON.stringify({
-                    chatId,
+                    conversationId,
                     messageId: message.id,
                     type: 'up',
                   }),
@@ -84,7 +84,7 @@ export function PureMessageActions({
                   loading: 'Upvoting Response...',
                   success: () => {
                     mutate<Array<Vote>>(
-                      `/api/vote?chatId=${chatId}`,
+                      `/api/vote?conversationId=${conversationId}`,
                       (currentVotes) => {
                         if (!currentVotes) return [];
 
@@ -95,7 +95,7 @@ export function PureMessageActions({
                         return [
                           ...votesWithoutCurrent,
                           {
-                            chatId,
+                            conversationId,
                             messageId: message.id,
                             isUpvoted: true,
                           },
@@ -127,7 +127,7 @@ export function PureMessageActions({
                 const downvote = fetch('/api/vote', {
                   method: 'PATCH',
                   body: JSON.stringify({
-                    chatId,
+                    conversationId,
                     messageId: message.id,
                     type: 'down',
                   }),
@@ -137,7 +137,7 @@ export function PureMessageActions({
                   loading: 'Downvoting Response...',
                   success: () => {
                     mutate<Array<Vote>>(
-                      `/api/vote?chatId=${chatId}`,
+                      `/api/vote?conversationId=${conversationId}`,
                       (currentVotes) => {
                         if (!currentVotes) return [];
 
@@ -148,7 +148,7 @@ export function PureMessageActions({
                         return [
                           ...votesWithoutCurrent,
                           {
-                            chatId,
+                            conversationId,
                             messageId: message.id,
                             isUpvoted: false,
                           },

@@ -6,11 +6,11 @@ import { memo } from 'react';
 import { UseChatHelpers } from '@ai-sdk/react';
 
 interface SuggestedActionsProps {
-  chatId: string;
+  conversationId: string;
   append: UseChatHelpers['append'];
 }
 
-function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
+function PureSuggestedActions({ conversationId, append }: SuggestedActionsProps) {
   const suggestedActions = [
     {
       title: 'What are the advantages',
@@ -51,7 +51,7 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
           <Button
             variant="ghost"
             onClick={async () => {
-              window.history.replaceState({}, '', `/chat/${chatId}`);
+              window.history.replaceState({}, '', `/chat/${conversationId}`);
 
               append({
                 role: 'user',

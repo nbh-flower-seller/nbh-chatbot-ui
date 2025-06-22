@@ -2,9 +2,9 @@ import { auth } from '@/app/(auth)/auth';
 import { ArtifactKind } from '@/components/artifact';
 import {
   deleteDocumentsByIdAfterTimestamp,
-  getDocumentsById,
+  getDocumentsByIds,
   saveDocument,
-} from '@/lib/db/queries';
+} from '@/lib/db/queries/chat/document-queries';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const documents = await getDocumentsById({ id });
+  const documents = await getDocumentsByIds({ ids: [id] });
 
   const [document] = documents;
 
@@ -87,7 +87,7 @@ export async function PATCH(request: Request) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const documents = await getDocumentsById({ id });
+  const documents = await getDocumentsByIds({ ids: [id] });
 
   const [document] = documents;
 

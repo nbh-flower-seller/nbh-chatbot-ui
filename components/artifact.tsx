@@ -22,17 +22,19 @@ import { ArtifactMessages } from './artifact-messages';
 import { useSidebar } from './ui/sidebar';
 import { useArtifact } from '@/hooks/use-artifact';
 import { imageArtifact } from '@/artifacts/image/client';
-import { codeArtifact } from '@/artifacts/code/client';
 import { sheetArtifact } from '@/artifacts/sheet/client';
 import { textArtifact } from '@/artifacts/text/client';
+import { shopArtifact } from '@/artifacts/shop/client';
+import { orderArtifact } from '@/artifacts/order/client';
 import equal from 'fast-deep-equal';
 import { UseChatHelpers } from '@ai-sdk/react';
 
 export const artifactDefinitions = [
   textArtifact,
-  codeArtifact,
   imageArtifact,
   sheetArtifact,
+  shopArtifact,
+  orderArtifact,
 ];
 export type ArtifactKind = (typeof artifactDefinitions)[number]['kind'];
 
@@ -52,7 +54,7 @@ export interface UIArtifact {
 }
 
 function PureArtifact({
-  chatId,
+  conversationId,
   input,
   setInput,
   handleSubmit,
@@ -67,7 +69,7 @@ function PureArtifact({
   votes,
   isReadonly,
 }: {
-  chatId: string;
+  conversationId: string;
   input: string;
   setInput: UseChatHelpers['setInput'];
   status: UseChatHelpers['status'];
@@ -311,7 +313,7 @@ function PureArtifact({
 
               <div className="flex flex-col h-full justify-between items-center gap-4">
                 <ArtifactMessages
-                  chatId={chatId}
+                  conversationId={conversationId}
                   status={status}
                   votes={votes}
                   messages={messages}
@@ -323,7 +325,7 @@ function PureArtifact({
 
                 <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
                   <MultimodalInput
-                    chatId={chatId}
+                    conversationId={conversationId}
                     input={input}
                     setInput={setInput}
                     handleSubmit={handleSubmit}

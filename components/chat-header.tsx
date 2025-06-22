@@ -14,12 +14,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { VisibilityType, VisibilitySelector } from './visibility-selector';
 
 function PureChatHeader({
-  chatId,
+  conversationId,
   selectedModelId,
   selectedVisibilityType,
   isReadonly,
 }: {
-  chatId: string;
+  conversationId: string;
   selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
@@ -61,7 +61,7 @@ function PureChatHeader({
 
       {!isReadonly && (
         <VisibilitySelector
-          chatId={chatId}
+          conversationId={conversationId}
           selectedVisibilityType={selectedVisibilityType}
           className="order-1 md:order-3"
         />

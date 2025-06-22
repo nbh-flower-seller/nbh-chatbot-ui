@@ -1,11 +1,12 @@
-import { codeDocumentHandler } from '@/artifacts/code/server';
 import { imageDocumentHandler } from '@/artifacts/image/server';
 import { sheetDocumentHandler } from '@/artifacts/sheet/server';
 import { textDocumentHandler } from '@/artifacts/text/server';
+import { shopDocumentHandler } from '@/artifacts/shop/server';
+import { orderDocumentHandler } from '@/artifacts/order/server';
 import { ArtifactKind } from '@/components/artifact';
 import { DataStreamWriter } from 'ai';
 import { Document } from '../db/schema';
-import { saveDocument } from '../db/queries';
+import { saveDocument } from '@/lib/db/queries/chat/document-queries';
 import { Session } from 'next-auth';
 
 export interface SaveDocumentProps {
@@ -91,9 +92,10 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
  */
 export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   textDocumentHandler,
-  codeDocumentHandler,
   imageDocumentHandler,
   sheetDocumentHandler,
+  shopDocumentHandler,
+  orderDocumentHandler,
 ];
 
-export const artifactKinds = ['text', 'code', 'image', 'sheet'] as const;
+export const artifactKinds = ['text', 'code', 'image', 'sheet', 'shop', 'order'] as const;

@@ -22,7 +22,7 @@ Before creating the new tables, you will need to update the variables of existin
 ```tsx title="/lib/db/schema.ts"
 export const messageDeprecated = pgTable("Message", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  chatId: uuid("chatId")
+  conversationId: uuid("conversationId")
     .notNull()
     .references(() => chat.id),
   role: varchar("role").notNull(),
@@ -35,7 +35,7 @@ export type MessageDeprecated = InferSelectModel<typeof messageDeprecated>;
 export const voteDeprecated = pgTable(
   "Vote",
   {
-    chatId: uuid("chatId")
+    conversationId: uuid("conversationId")
       .notNull()
       .references(() => chat.id),
     messageId: uuid("messageId")
@@ -45,7 +45,7 @@ export const voteDeprecated = pgTable(
   },
   (table) => {
     return {
-      pk: primaryKey({ columns: [table.chatId, table.messageId] }),
+      pk: primaryKey({ columns: [table.conversationId, table.messageId] }),
     };
   },
 );
@@ -58,7 +58,7 @@ After deprecating the current table schemas, you can now proceed to create schem
 ```ts title="/lib/db/schema.ts"
 export const message = pgTable("Message_v2", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  chatId: uuid("chatId")
+  conversationId: uuid("conversationId")
     .notNull()
     .references(() => chat.id),
   role: varchar("role").notNull(),
@@ -72,7 +72,7 @@ export type Message = InferSelectModel<typeof message>;
 export const vote = pgTable(
   "Vote_v2",
   {
-    chatId: uuid("chatId")
+    conversationId: uuid("conversationId")
       .notNull()
       .references(() => chat.id),
     messageId: uuid("messageId")
@@ -82,7 +82,7 @@ export const vote = pgTable(
   },
   (table) => {
     return {
-      pk: primaryKey({ columns: [table.chatId, table.messageId] }),
+      pk: primaryKey({ columns: [table.conversationId, table.messageId] }),
     };
   },
 );

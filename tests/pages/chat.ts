@@ -4,7 +4,7 @@ import { chatModels } from '@/lib/ai/models';
 import { expect, Page } from '@playwright/test';
 
 export class ChatPage {
-  constructor(private page: Page) {}
+  constructor(private page: Page) { }
 
   public get sendButton() {
     return this.page.getByTestId('send-button');
@@ -48,9 +48,9 @@ export class ChatPage {
     await response.finished();
   }
 
-  async hasChatIdInUrl() {
+  async hasconversationIdInUrl() {
     await expect(this.page).toHaveURL(
-      /^http:\/\/localhost:3000\/chat\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      /^http:\/\/localhost:3000\/conversation\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
     );
   }
 
@@ -124,8 +124,8 @@ export class ChatPage {
       .then(async (visible) =>
         visible
           ? await lastMessageElement
-              .getByTestId('message-reasoning')
-              .innerText()
+            .getByTestId('message-reasoning')
+            .innerText()
           : null,
       )
       .catch(() => null);

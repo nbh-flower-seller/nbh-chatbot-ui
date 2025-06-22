@@ -17,7 +17,8 @@ export type DataStreamDelta = {
     | 'suggestion'
     | 'clear'
     | 'finish'
-    | 'kind';
+    | 'kind'
+    | 'order-delta';
   content: string | Suggestion;
 };
 

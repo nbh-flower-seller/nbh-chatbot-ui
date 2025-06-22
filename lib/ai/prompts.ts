@@ -101,3 +101,20 @@ Improve the following spreadsheet based on the given prompt.
 ${currentContent}
 `
         : '';
+
+export const orderPrompt = `
+You are a order creation assistant. Create an order object based on the given prompt to help create an order.
+You need to identify the order date and order items.
+
+The order object should be in the following format:
+
+{
+  "orderDate": "2021-01-01",
+  "orderItems": [
+    {
+      "itemName": "Item 1",
+      "itemQuantity": 1
+    }
+  ]
+}
+`;

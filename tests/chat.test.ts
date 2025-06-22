@@ -23,7 +23,7 @@ test.describe('chat activity', () => {
 
     const assistantMessage = await chatPage.getRecentAssistantMessage();
     expect(assistantMessage.content).toContain("It's just green duh!");
-    await chatPage.hasChatIdInUrl();
+    await chatPage.hasconversationIdInUrl();
   });
 
   test('send a user message from suggestion', async () => {

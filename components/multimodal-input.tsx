@@ -25,7 +25,7 @@ import equal from 'fast-deep-equal';
 import { UseChatHelpers } from '@ai-sdk/react';
 
 function PureMultimodalInput({
-  chatId,
+  conversationId,
   input,
   setInput,
   status,
@@ -38,7 +38,7 @@ function PureMultimodalInput({
   handleSubmit,
   className,
 }: {
-  chatId: string;
+  conversationId: string;
   input: UseChatHelpers['input'];
   setInput: UseChatHelpers['setInput'];
   status: UseChatHelpers['status'];
@@ -104,7 +104,7 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    window.history.replaceState({}, '', `/chat/${chatId}`);
+    window.history.replaceState({}, '', `/conversation/${conversationId}`);
 
     handleSubmit(undefined, {
       experimental_attachments: attachments,
@@ -123,7 +123,7 @@ function PureMultimodalInput({
     setAttachments,
     setLocalStorageInput,
     width,
-    chatId,
+    conversationId,
   ]);
 
   const uploadFile = async (file: File) => {
@@ -138,7 +138,6 @@ function PureMultimodalInput({
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Upload response data:', data);
         
         // Check that we have the expected properties in the response
         if (!data.url || !data.name) {
@@ -202,7 +201,7 @@ function PureMultimodalInput({
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
-          <SuggestedActions append={append} chatId={chatId} />
+          <SuggestedActions append={append} conversationId={conversationId} />
         )}
 
       <input

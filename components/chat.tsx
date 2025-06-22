@@ -59,7 +59,7 @@ export function Chat({
       
       // Log additional context that might help debugging
       console.error('Error context:', { 
-        chatId: id,
+        conversationId: id,
         model: selectedChatModel,
         hasAttachments: attachments.length > 0 
       });
@@ -69,7 +69,7 @@ export function Chat({
   });
 
   const { data: votes } = useSWR<Array<Vote>>(
-    messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
+    messages.length >= 2 ? `/api/vote?conversationId=${id}` : null,
     fetcher,
   );
 
@@ -80,14 +80,14 @@ export function Chat({
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader
-          chatId={id}
+          conversationId={id}
           selectedModelId={selectedChatModel}
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
         />
 
         <Messages
-          chatId={id}
+          conversationId={id}
           status={status}
           votes={votes}
           messages={messages}
@@ -100,7 +100,7 @@ export function Chat({
         <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
           {!isReadonly && (
             <MultimodalInput
-              chatId={id}
+              conversationId={id}
               input={input}
               setInput={setInput}
               handleSubmit={handleSubmit}
@@ -117,7 +117,7 @@ export function Chat({
       </div>
 
       <Artifact
-        chatId={id}
+        conversationId={id}
         input={input}
         setInput={setInput}
         handleSubmit={handleSubmit}

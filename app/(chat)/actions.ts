@@ -2,14 +2,13 @@
 
 import { generateText, Message } from 'ai';
 import { cookies } from 'next/headers';
-
 import {
-  deleteMessagesByChatIdAfterTimestamp,
-  getMessageById,
-  updateChatVisiblityById,
-} from '@/lib/db/queries';
+  deleteMessagesByConversationIdAfterTimestamp,
+} from '@/lib/db/queries/chat/message-queries';
+import { updateConversationVisiblityById } from '@/lib/db/queries/chat/conversation-queries';
 import { VisibilityType } from '@/components/visibility-selector';
 import { myProvider } from '@/lib/ai/providers';
+import { getMessageById } from '@/lib/db/queries/chat/message-queries';
 
 export async function saveChatModelAsCookie(model: string) {
   const cookieStore = await cookies();
@@ -37,18 +36,18 @@ export async function generateTitleFromUserMessage({
 export async function deleteTrailingMessages({ id }: { id: string }) {
   const [message] = await getMessageById({ id });
 
-  await deleteMessagesByChatIdAfterTimestamp({
-    chatId: message.chatId,
+  await deleteMessagesByConversationIdAfterTimestamp({
+    conversationId: message.conversationId,
     timestamp: message.createdAt,
   });
 }
 
-export async function updateChatVisibility({
-  chatId,
+export async function updateConversationVisibility({
+  conversationId,
   visibility,
 }: {
-  chatId: string;
+  conversationId: string;
   visibility: VisibilityType;
 }) {
-  await updateChatVisiblityById({ chatId, visibility });
+  await updateConversationVisiblityById({ conversationId, visibility });
 }

@@ -8,7 +8,7 @@ import equal from 'fast-deep-equal';
 import { UseChatHelpers } from '@ai-sdk/react';
 
 interface MessagesProps {
-  chatId: string;
+  conversationId: string;
   status: UseChatHelpers['status'];
   votes: Array<Vote> | undefined;
   messages: Array<UIMessage>;
@@ -19,7 +19,7 @@ interface MessagesProps {
 }
 
 function PureMessages({
-  chatId,
+  conversationId,
   status,
   votes,
   messages,
@@ -40,7 +40,7 @@ function PureMessages({
       {messages.map((message, index) => (
         <PreviewMessage
           key={message.id}
-          chatId={chatId}
+          conversationId={conversationId}
           message={message}
           isLoading={status === 'streaming' && messages.length - 1 === index}
           vote={
