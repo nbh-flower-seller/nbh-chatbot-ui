@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { DataStreamWriter, generateObject } from 'ai'
 import { Session } from 'next-auth'
 import { openai } from '@ai-sdk/openai'
+import { getBase64DataUrlFromImageUrl } from '@/lib/utils'
 
 interface DetectProductProps {
 	session: Session
@@ -18,15 +19,16 @@ export const detectProduct = ({ session, dataStream }: DetectProductProps) =>
 		execute: async ({ imageUrl }) => {
 			try {
 				console.log('detectProduct called with imageUrl', { imageUrl })
+				const base64DataUrl = await getBase64DataUrlFromImageUrl(imageUrl)
 				const response = await generateObject({
-					model: openai('o4-mini-2025-04-16'),
+					model: openai('gpt-4o-2024-08-06'),
 					messages: [
 						{
 							role: 'user',
 							content: 'Detect the flower product from the image. Format the response as JSON with fields: flower_name, and confidence (0-1).',
 							experimental_attachments: [
 								{
-									url: imageUrl,
+									url: base64DataUrl,
 									contentType: 'image/*'
 								}
 							]

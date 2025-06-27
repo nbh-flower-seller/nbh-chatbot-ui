@@ -205,3 +205,12 @@ export function capitalize(str: string): string {
   if (!str || str.length === 0) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export async function getBase64DataUrlFromImageUrl(imageUrl: string): Promise<string> {
+  const response = await fetch(imageUrl)
+  if (!response.ok) throw new Error('Failed to fetch image')
+  const contentType = response.headers.get('content-type') || 'image/png'
+  const buffer = await response.arrayBuffer()
+  const base64 = Buffer.from(buffer).toString('base64')
+  return `data:${contentType};base64,${base64}`
+}
